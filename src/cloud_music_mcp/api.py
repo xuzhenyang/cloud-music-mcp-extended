@@ -77,3 +77,76 @@ def search_song(keyword, limit=5):
         return {"success": False, "error": "未找到结果"}
     except Exception as e:
         return {"success": False, "error": str(e)}
+
+
+def create_playlist(name: str, privacy: bool = False):
+    """创建歌单"""
+    if not load_session()[0]:
+        return {"success": False, "error": "未登录"}
+    
+    try:
+        result = apis.playlist.SetCreatePlaylist(name, privacy)
+        if result['code'] == 200:
+            return {
+                "success": True,
+                "playlist_id": result.get('id'),
+                "name": result.get('name'),
+                "message": f"歌单 '{name}' 创建成功"
+            }
+        else:
+            return {"success": False, "error": f"API 错误: {result.get('message', '未知错误')}"}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+
+def add_tracks_to_playlist(playlist_id, track_ids):
+    """批量添加歌曲到歌单"""
+    if not load_session()[0]:
+        return {"success": False, "error": "未登录"}
+    
+    try:
+        # 确保是列表
+        ids = track_ids if isinstance(track_ids, list) else [track_ids]
+        result = apis.playlist.SetManipulatePlaylistTracks(ids, playlist_id, op="add")
+        if result['code'] == 200:
+            return {
+                "success": True,
+                "message": f"成功添加 {len(ids)} 首歌曲到歌单",
+                "playlist_id": playlist_id
+            }
+        else:
+            return {"success": False, "error": f"API 错误: {result.get('message', '未知错误')}"}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+
+@apis.WeapiCryptoRequest
+def _GetSimilarSongsInternal(song_id, limit=30):
+    """内部函数：获取相似歌曲（Weapi）"""
+    return "/weapi/v1/discovery/simiSong", {
+        "songid": str(song_id),
+        "limit": str(limit)
+    }
+
+
+def get_similar_songs(song_id, limit=20):
+    """获取与指定歌曲相似的歌"""
+    if not load_session()[0]:
+        return {"success": False, "error": "未登录"}
+    
+    try:
+        result = _GetSimilarSongsInternal(song_id, limit)
+        if result['code'] == 200 and 'songs' in result:
+            songs = []
+            for song in result['songs']:
+                songs.append({
+                    "id": song['id'],
+                    "name": song['name'],
+                    "artist": song['artists'][0]['name'] if song.get('artists') else "未知",
+                    "album": song['album']['name'] if song.get('album') else ""
+                })
+            return {"success": True, "songs": songs}
+        else:
+            return {"success": False, "error": f"API 错误: {result.get('message', '未知错误')}"}
+    except Exception as e:
+        return {"success": False, "error": str(e)}

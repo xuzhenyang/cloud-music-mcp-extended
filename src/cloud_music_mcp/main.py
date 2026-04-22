@@ -25,6 +25,9 @@ from cloud_music_mcp.api import (
     get_daily_recommendations,
     get_user_playlists,
     search_song,
+    create_playlist,
+    add_tracks_to_playlist,
+    get_similar_songs,
 )
 
 # 配置日志 (初始化)
@@ -172,6 +175,57 @@ def cloud_music_play(id: str, type: str = "song"):
     except Exception as e:
         logger.error(f"播放失败: {e}")
         return f"播放失败: {e}"
+
+
+@mcp.tool()
+def cloud_music_create_playlist(name: str, privacy: bool = False):
+    """
+    创建网易云歌单
+    args:
+        name: 歌单名称
+        privacy: 是否设为隐私歌单 (默认 False)
+    """
+    logger.info(f"Calling cloud_music_create_playlist: {name}")
+    result = create_playlist(name, privacy)
+    if result["success"]:
+        return f"✅ 歌单创建成功: '{name}' (ID: {result['playlist_id']})"
+    else:
+        return f"创建失败: {result.get('error')}"
+
+
+@mcp.tool()
+def cloud_music_add_tracks(playlist_id: str, track_ids: list):
+    """
+    批量添加歌曲到歌单
+    args:
+        playlist_id: 歌单 ID
+        track_ids: 歌曲 ID 列表，例如 ["12345", "67890"]
+    """
+    logger.info(f"Calling cloud_music_add_tracks: playlist={playlist_id}, tracks={track_ids}")
+    result = add_tracks_to_playlist(playlist_id, track_ids)
+    if result["success"]:
+        return f"✅ 已添加 {len(track_ids)} 首歌曲到歌单 (ID: {playlist_id})"
+    else:
+        return f"添加失败: {result.get('error')}"
+
+
+@mcp.tool()
+def cloud_music_get_similar_songs(song_id: str, limit: int = 20):
+    """
+    获取与指定歌曲相似的歌
+    args:
+        song_id: 歌曲 ID (网易云)
+        limit: 返回数量 (默认 20)
+    """
+    logger.info(f"Calling cloud_music_get_similar_songs: song={song_id}, limit={limit}")
+    result = get_similar_songs(song_id, limit)
+    if result["success"]:
+        text = f"🔍 相似推荐 ({len(result['songs'])}首):\n"
+        for i, song in enumerate(result["songs"], 1):
+            text += f"{i}. {song['name']} - {song['artist']} (ID: {song['id']})\n"
+        return text
+    else:
+        return f"获取失败: {result.get('error')}"
 
 
 if __name__ == "__main__":

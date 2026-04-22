@@ -19,6 +19,7 @@
 - **🧠 个性化推荐**：完美接入您的**每日推荐**和**歌单**。Agent 会根据您的听歌品味来播放音乐。
 - **🔍 搜歌功能**：支持按关键词搜索歌曲、歌手或专辑，并直接播放。
 - **🎛️ 桌面端联动**：通过 URL Scheme 唤起网易云音乐客户端播放，无缝衔接原生体验。
+- **📁 歌单管理**：支持创建歌单、批量收藏歌曲，以及获取相似歌曲推荐。
 
 ## 🛠️ 工具列表
 
@@ -32,6 +33,9 @@
 | `cloud_music_my_playlists`        | 无                                                | 获取用户的所有歌单（包括创建的和收藏的）。 |
 | `cloud_music_search`              | `keyword`: 关键词 (歌名/歌手)                     | 按关键词搜索歌曲、歌手或专辑。             |
 | `cloud_music_play`                | `id`: 资源ID `<br>type`: 类型 ('song'/'playlist') | 播放指定的歌曲或歌单（自动唤起桌面应用）。 |
+| `cloud_music_create_playlist`     | `name`: 歌单名称, `privacy`: 是否隐私歌单         | 创建新的网易云歌单。                       |
+| `cloud_music_add_tracks`          | `playlist_id`: 歌单ID, `track_ids`: 歌曲ID列表    | 批量添加歌曲到指定歌单。                   |
+| `cloud_music_get_similar_songs`   | `song_id`: 歌曲ID, `limit`: 返回数量(默认20)      | 获取与指定歌曲相似的推荐歌曲。             |
 
 ## 🚀 安装与使用
 
@@ -60,7 +64,7 @@ powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
 
 ```bash
 # 克隆项目
-git clone https://github.com/Code-MonkeyZhang/cloud-music-mcp.git
+git clone https://github.com/xuzhenyang/cloud-music-mcp.git
 cd cloud-music-mcp
 
 # 创建虚拟环境
@@ -135,3 +139,6 @@ uv pip install -e .
    - 获取推荐："看看今日推荐有什么"
    - 搜索歌曲："搜一下周杰伦的歌"
    - 播放歌单："播放我的收藏歌单"
+   - 创建歌单："创建一个名为 '深夜电台' 的歌单"
+   - 批量收藏："把这首歌加到刚才的歌单里"
+   - 相似推荐："找几首和这首歌风格相似的歌"
