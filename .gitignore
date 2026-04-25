@@ -12,6 +12,9 @@ ENV/
 src/storage/*.json
 src/storage/*.ncm
 src/storage/*.png
+src/cloud_music_mcp/storage/*.json
+src/cloud_music_mcp/storage/*.ncm
+src/cloud_music_mcp/storage/*.png
 
 # Logs
 *.log
