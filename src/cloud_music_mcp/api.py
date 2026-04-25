@@ -129,6 +129,25 @@ def _GetSimilarSongsInternal(song_id, limit=30):
     }
 
 
+def get_song_detail(song_id):
+    """获取歌曲详情"""
+    load_session()
+    try:
+        result = apis.track.GetTrackDetail([str(song_id)])
+        if result['code'] == 200 and 'songs' in result and result['songs']:
+            song = result['songs'][0]
+            return {
+                "success": True,
+                "id": str(song['id']),
+                "name": song['name'],
+                "artist": song['ar'][0]['name'] if song.get('ar') else "未知",
+                "album": song['album']['name'] if song.get('album') else ""
+            }
+        return {"success": False, "error": "未找到歌曲"}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+
 def get_similar_songs(song_id, limit=20):
     """获取与指定歌曲相似的歌"""
     if not load_session()[0]:

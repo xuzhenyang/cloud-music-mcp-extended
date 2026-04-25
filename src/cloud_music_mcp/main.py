@@ -25,6 +25,7 @@ from cloud_music_mcp.api import (
     get_daily_recommendations,
     get_user_playlists,
     search_song,
+    get_song_detail,
     create_playlist,
     add_tracks_to_playlist,
     get_similar_songs,
@@ -207,6 +208,26 @@ def cloud_music_add_tracks(playlist_id: str, track_ids: list):
         return f"✅ 已添加 {len(track_ids)} 首歌曲到歌单 (ID: {playlist_id})"
     else:
         return f"添加失败: {result.get('error')}"
+
+
+@mcp.tool()
+def cloud_music_get_song_detail(song_id: str):
+    """
+    获取歌曲详情
+    args:
+        song_id: 歌曲 ID (网易云)
+    """
+    logger.info(f"Calling cloud_music_get_song_detail: song={song_id}")
+    result = get_song_detail(song_id)
+    if result["success"]:
+        return {
+            "id": result["id"],
+            "name": result["name"],
+            "artist": result["artist"],
+            "album": result["album"],
+        }
+    else:
+        return f"获取失败: {result.get('error')}"
 
 
 @mcp.tool()
