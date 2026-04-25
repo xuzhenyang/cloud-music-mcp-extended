@@ -26,6 +26,7 @@ from cloud_music_mcp.api import (
     get_user_playlists,
     search_song,
     get_song_detail,
+    get_audio_url,
     create_playlist,
     add_tracks_to_playlist,
     get_similar_songs,
@@ -225,6 +226,27 @@ def cloud_music_get_song_detail(song_id: str):
             "name": result["name"],
             "artist": result["artist"],
             "album": result["album"],
+        }
+    else:
+        return f"获取失败: {result.get('error')}"
+
+
+@mcp.tool()
+def cloud_music_get_audio_url(song_id: str):
+    """
+    获取歌曲音频下载链接
+    args:
+        song_id: 歌曲 ID (网易云)
+    """
+    logger.info(f"Calling cloud_music_get_audio_url: song={song_id}")
+    result = get_audio_url(song_id)
+    if result["success"]:
+        return {
+            "id": result["id"],
+            "url": result["url"],
+            "br": result["br"],
+            "type": result["type"],
+            "duration": result["duration"],
         }
     else:
         return f"获取失败: {result.get('error')}"

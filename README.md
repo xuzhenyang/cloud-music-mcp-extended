@@ -36,6 +36,7 @@
 | `cloud_music_create_playlist`     | `name`: 歌单名称, `privacy`: 是否隐私歌单         | 创建新的网易云歌单。                       |
 | `cloud_music_add_tracks`          | `playlist_id`: 歌单ID, `track_ids`: 歌曲ID列表    | 批量添加歌曲到指定歌单。                   |
 | `cloud_music_get_song_detail`     | `song_id`: 歌曲ID                                 | 获取歌曲详情 (ID, 歌名, 歌手, 专辑)。      |
+| `cloud_music_get_audio_url`       | `song_id`: 歌曲ID                                 | 获取歌曲音频下载链接 (URL, 码率, 格式)。   |
 | `cloud_music_get_similar_songs`   | `song_id`: 歌曲ID, `limit`: 返回数量(默认20)      | 获取与指定歌曲相似的推荐歌曲。             |
 
 ## 🚀 安装与使用

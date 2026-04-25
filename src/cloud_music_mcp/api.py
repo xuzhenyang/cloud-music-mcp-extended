@@ -129,6 +129,29 @@ def _GetSimilarSongsInternal(song_id, limit=30):
     }
 
 
+def get_audio_url(song_id):
+    """获取歌曲音频下载链接"""
+    if not load_session()[0]:
+        return {"success": False, "error": "未登录"}
+    try:
+        result = apis.track.GetTrackAudio([str(song_id)])
+        if result['code'] == 200 and 'data' in result and result['data']:
+            data = result['data'][0]
+            if data.get('url'):
+                return {
+                    "success": True,
+                    "id": str(data['id']),
+                    "url": data['url'],
+                    "br": data.get('br'),
+                    "type": data.get('type'),
+                    "duration": data.get('time'),  # ms
+                }
+            return {"success": False, "error": "该歌曲暂无音频资源（可能为 VIP 独占或版权限制）"}
+        return {"success": False, "error": "获取音频链接失败"}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+
 def get_song_detail(song_id):
     """获取歌曲详情"""
     load_session()
