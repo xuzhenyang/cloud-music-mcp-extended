@@ -35,9 +35,11 @@
 | `cloud_music_play`                | `id`: 资源ID `<br>type`: 类型 ('song'/'playlist') | 播放指定的歌曲或歌单（自动唤起桌面应用）。 |
 | `cloud_music_create_playlist`     | `name`: 歌单名称, `privacy`: 是否隐私歌单         | 创建新的网易云歌单。                       |
 | `cloud_music_add_tracks`          | `playlist_id`: 歌单ID, `track_ids`: 歌曲ID列表    | 批量添加歌曲到指定歌单。                   |
-| `cloud_music_get_song_detail`     | `song_id`: 歌曲ID                                 | 获取歌曲详情 (ID, 歌名, 歌手, 专辑)。      |
+| `cloud_music_get_song_detail`     | `song_id`: 歌曲ID                                 | 获取歌曲详情 (ID, 歌名, 歌手, 专辑, artist_id, album_id)。 |
 | `cloud_music_get_audio_url`       | `song_id`: 歌曲ID                                 | 获取歌曲音频下载链接 (URL, 码率, 格式)。   |
 | `cloud_music_get_similar_songs`   | `song_id`: 歌曲ID, `limit`: 返回数量(默认20)      | 获取与指定歌曲相似的推荐歌曲。             |
+| `cloud_music_get_artist_tracks`   | `artist_id`: 艺术家ID, `limit`: 返回数量(默认30)  | 获取艺术家的热门歌曲列表。                 |
+| `cloud_music_get_album_songs`     | `album_id`: 专辑ID                                | 获取专辑的歌曲列表。                       |
 
 ## 🚀 安装与使用
 
