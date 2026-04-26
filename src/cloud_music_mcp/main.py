@@ -32,6 +32,7 @@ from cloud_music_mcp.api import (
     create_playlist,
     add_tracks_to_playlist,
     get_similar_songs,
+    get_similar_artists,
 )
 
 # 配置日志 (初始化)
@@ -302,6 +303,21 @@ def cloud_music_get_similar_songs(song_id: str, limit: int = 20):
         for i, song in enumerate(result["songs"], 1):
             text += f"{i}. {song['name']} - {song['artist']} (ID: {song['id']})\n"
         return text
+    else:
+        return f"获取失败: {result.get('error')}"
+
+
+@mcp.tool()
+def cloud_music_get_similar_artists(artist_id: str):
+    """
+    获取与指定艺人相似的艺人
+    args:
+        artist_id: 艺人 ID (网易云)
+    """
+    logger.info(f"Calling cloud_music_get_similar_artists: artist={artist_id}")
+    result = get_similar_artists(artist_id)
+    if result["success"]:
+        return result["artists"]
     else:
         return f"获取失败: {result.get('error')}"
 

@@ -129,6 +129,14 @@ def _GetSimilarSongsInternal(song_id, limit=30):
     }
 
 
+@apis.WeapiCryptoRequest
+def _GetSimilarArtistsInternal(artist_id):
+    """内部函数：获取相似艺人（Weapi）"""
+    return "/weapi/discovery/simiArtist", {
+        "artistid": str(artist_id),
+    }
+
+
 def get_audio_url(song_id):
     """获取歌曲音频下载链接"""
     if not load_session()[0]:
@@ -214,6 +222,25 @@ def get_song_detail(song_id):
                 "album_id": song['album']['id'] if song.get('album') else None,
             }
         return {"success": False, "error": "未找到歌曲"}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+
+def get_similar_artists(artist_id):
+    """获取与指定艺人相似的艺人"""
+    if not load_session()[0]:
+        return {"success": False, "error": "未登录"}
+    try:
+        result = _GetSimilarArtistsInternal(artist_id)
+        if result['code'] == 200 and 'artists' in result:
+            artists = []
+            for artist in result['artists']:
+                artists.append({
+                    "id": artist['id'],
+                    "name": artist['name'],
+                })
+            return {"success": True, "artists": artists}
+        return {"success": False, "error": "获取相似艺人失败"}
     except Exception as e:
         return {"success": False, "error": str(e)}
 
