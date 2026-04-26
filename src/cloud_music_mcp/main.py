@@ -27,6 +27,8 @@ from cloud_music_mcp.api import (
     search_song,
     get_song_detail,
     get_audio_url,
+    get_artist_tracks,
+    get_album_songs,
     create_playlist,
     add_tracks_to_playlist,
     get_similar_songs,
@@ -225,7 +227,9 @@ def cloud_music_get_song_detail(song_id: str):
             "id": result["id"],
             "name": result["name"],
             "artist": result["artist"],
+            "artist_id": result.get("artist_id"),
             "album": result["album"],
+            "album_id": result.get("album_id"),
         }
     else:
         return f"获取失败: {result.get('error')}"
@@ -248,6 +252,37 @@ def cloud_music_get_audio_url(song_id: str):
             "type": result["type"],
             "duration": result["duration"],
         }
+    else:
+        return f"获取失败: {result.get('error')}"
+
+
+@mcp.tool()
+def cloud_music_get_artist_tracks(artist_id: str, limit: int = 30):
+    """
+    获取艺术家的热门歌曲
+    args:
+        artist_id: 艺术家 ID (网易云)
+        limit: 返回数量 (默认 30)
+    """
+    logger.info(f"Calling cloud_music_get_artist_tracks: artist={artist_id}, limit={limit}")
+    result = get_artist_tracks(artist_id, limit)
+    if result["success"]:
+        return result["songs"]
+    else:
+        return f"获取失败: {result.get('error')}"
+
+
+@mcp.tool()
+def cloud_music_get_album_songs(album_id: str):
+    """
+    获取专辑的歌曲列表
+    args:
+        album_id: 专辑 ID (网易云)
+    """
+    logger.info(f"Calling cloud_music_get_album_songs: album={album_id}")
+    result = get_album_songs(album_id)
+    if result["success"]:
+        return result["songs"]
     else:
         return f"获取失败: {result.get('error')}"
 

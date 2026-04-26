@@ -152,6 +152,51 @@ def get_audio_url(song_id):
         return {"success": False, "error": str(e)}
 
 
+def get_artist_tracks(artist_id, limit=30):
+    """获取艺术家的热门歌曲"""
+    if not load_session()[0]:
+        return {"success": False, "error": "未登录"}
+    try:
+        result = apis.artist.GetArtistTracks(artist_id, limit=limit, offset=0)
+        if result['code'] == 200 and 'songs' in result:
+            songs = []
+            for song in result['songs']:
+                # GetArtistTracks 返回的字段名是 artists / album
+                artists = song.get('artists', song.get('ar', []))
+                album_info = song.get('album', song.get('al', {}))
+                songs.append({
+                    "id": song['id'],
+                    "name": song['name'],
+                    "artist": artists[0]['name'] if artists else "未知",
+                    "album": album_info.get('name', '') if album_info else ""
+                })
+            return {"success": True, "songs": songs}
+        return {"success": False, "error": "获取艺术家歌曲失败"}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+
+def get_album_songs(album_id):
+    """获取专辑的歌曲列表"""
+    if not load_session()[0]:
+        return {"success": False, "error": "未登录"}
+    try:
+        result = apis.album.GetAlbumInfo(album_id)
+        if result['code'] == 200 and 'songs' in result:
+            songs = []
+            for song in result['songs']:
+                songs.append({
+                    "id": song['id'],
+                    "name": song['name'],
+                    "artist": song['ar'][0]['name'] if song.get('ar') else "未知",
+                    "album": result.get('album', {}).get('name', '')
+                })
+            return {"success": True, "songs": songs}
+        return {"success": False, "error": "获取专辑歌曲失败"}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+
 def get_song_detail(song_id):
     """获取歌曲详情"""
     load_session()
@@ -164,7 +209,9 @@ def get_song_detail(song_id):
                 "id": str(song['id']),
                 "name": song['name'],
                 "artist": song['ar'][0]['name'] if song.get('ar') else "未知",
-                "album": song['album']['name'] if song.get('album') else ""
+                "artist_id": song['ar'][0]['id'] if song.get('ar') else None,
+                "album": song['album']['name'] if song.get('album') else "",
+                "album_id": song['album']['id'] if song.get('album') else None,
             }
         return {"success": False, "error": "未找到歌曲"}
     except Exception as e:
