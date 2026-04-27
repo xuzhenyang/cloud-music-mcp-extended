@@ -33,6 +33,7 @@ from cloud_music_mcp.api import (
     add_tracks_to_playlist,
     get_similar_songs,
     get_similar_artists,
+    get_song_wiki,
 )
 
 # 配置日志 (初始化)
@@ -318,6 +319,25 @@ def cloud_music_get_similar_artists(artist_id: str):
     result = get_similar_artists(artist_id)
     if result["success"]:
         return result["artists"]
+    else:
+        return f"获取失败: {result.get('error')}"
+
+
+@mcp.tool()
+def cloud_music_get_song_wiki(song_id: str):
+    """
+    获取歌曲音乐百科信息（曲风、情绪标签）
+    args:
+        song_id: 歌曲 ID (网易云)
+    """
+    logger.info(f"Calling cloud_music_get_song_wiki: song={song_id}")
+    result = get_song_wiki(song_id)
+    if result["success"]:
+        return {
+            "song_id": result["song_id"],
+            "genres": result["genres"],
+            "tags": result["tags"],
+        }
     else:
         return f"获取失败: {result.get('error')}"
 

@@ -245,6 +245,46 @@ def get_similar_artists(artist_id):
         return {"success": False, "error": str(e)}
 
 
+def get_song_wiki(song_id):
+    """获取歌曲音乐百科信息（曲风、标签等）"""
+    if not load_session()[0]:
+        return {"success": False, "error": "未登录"}
+    try:
+        result = _GetSongWikiInternal(song_id)
+        if result.get('code') == 200:
+            data = result.get('data', {})
+            blocks = data.get('blocks', [])
+            genres = []
+            tags = []
+            for block in blocks:
+                for creative in block.get('creatives', []):
+                    ctype = creative.get('creativeType', '')
+                    for r in creative.get('resources', []):
+                        title = r.get('uiElement', {}).get('mainTitle', {}).get('title', '')
+                        if title:
+                            if ctype == 'songTag':
+                                genres.append(title)
+                            elif ctype == 'songBizTag':
+                                tags.append(title)
+            return {
+                "success": True,
+                "song_id": str(song_id),
+                "genres": genres,
+                "tags": tags,
+            }
+        return {"success": False, "error": "获取音乐百科失败"}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+
+@apis.WeapiCryptoRequest
+def _GetSongWikiInternal(song_id):
+    """内部函数：获取歌曲音乐百科（Weapi）"""
+    return "/weapi/song/play/about/block/page", {
+        "songId": str(song_id),
+    }
+
+
 def get_similar_songs(song_id, limit=20):
     """获取与指定歌曲相似的歌"""
     if not load_session()[0]:
