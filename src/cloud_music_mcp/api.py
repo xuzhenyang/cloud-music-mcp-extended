@@ -245,6 +245,13 @@ def get_similar_artists(artist_id):
         return {"success": False, "error": str(e)}
 
 
+def _safe_get_title(resource: dict) -> str:
+    """安全地从 resource 中提取 title"""
+    ui = resource.get('uiElement') or {}
+    main = ui.get('mainTitle') or {}
+    return main.get('title', '')
+
+
 def get_song_wiki(song_id):
     """获取歌曲音乐百科信息（曲风、标签等）"""
     if not load_session()[0]:
@@ -257,10 +264,14 @@ def get_song_wiki(song_id):
             genres = []
             tags = []
             for block in blocks:
-                for creative in block.get('creatives', []):
+                for creative in block.get('creatives') or []:
+                    if not creative:
+                        continue
                     ctype = creative.get('creativeType', '')
-                    for r in creative.get('resources', []):
-                        title = r.get('uiElement', {}).get('mainTitle', {}).get('title', '')
+                    for r in creative.get('resources') or []:
+                        if not r:
+                            continue
+                        title = _safe_get_title(r)
                         if title:
                             if ctype == 'songTag':
                                 genres.append(title)
