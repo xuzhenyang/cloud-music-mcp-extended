@@ -35,6 +35,9 @@ from cloud_music_mcp.api import (
     get_similar_artists,
     get_song_wiki,
     get_style_list,
+    get_style_songs,
+    search_playlist,
+    get_playlist_songs,
 )
 
 # 配置日志 (初始化)
@@ -353,6 +356,59 @@ def cloud_music_get_style_list():
     result = get_style_list()
     if result["success"]:
         return {"tags": result["tags"]}
+    else:
+        return f"获取失败: {result.get('error')}"
+
+
+@mcp.tool()
+def cloud_music_get_style_songs(tag_id: str, size: int = 20, sort: int = 0):
+    """
+    获取指定曲风标签下的歌曲
+    args:
+        tag_id: 曲风标签 ID
+        size: 返回数量（默认 20）
+        sort: 排序方式（0=热度，1=时间）
+    """
+    logger.info(f"Calling cloud_music_get_style_songs: tag={tag_id}, size={size}")
+    result = get_style_songs(tag_id, size, sort)
+    if result["success"]:
+        return {
+            "tag_id": result["tag_id"],
+            "songs": result["songs"],
+            "has_more": result["has_more"],
+        }
+    else:
+        return f"获取失败: {result.get('error')}"
+
+
+@mcp.tool()
+def cloud_music_search_playlist(keyword: str, limit: int = 10):
+    """
+    搜索歌单
+    args:
+        keyword: 搜索关键词
+        limit: 返回数量（默认 10）
+    """
+    logger.info(f"Calling cloud_music_search_playlist: keyword={keyword}")
+    result = search_playlist(keyword, limit)
+    if result["success"]:
+        return {"playlists": result["playlists"]}
+    else:
+        return f"搜索失败: {result.get('error')}"
+
+
+@mcp.tool()
+def cloud_music_get_playlist_songs(playlist_id: str, limit: int = 50):
+    """
+    获取歌单中的所有歌曲
+    args:
+        playlist_id: 歌单 ID
+        limit: 返回数量（默认 50）
+    """
+    logger.info(f"Calling cloud_music_get_playlist_songs: playlist={playlist_id}")
+    result = get_playlist_songs(playlist_id, limit)
+    if result["success"]:
+        return {"songs": result["songs"]}
     else:
         return f"获取失败: {result.get('error')}"
 

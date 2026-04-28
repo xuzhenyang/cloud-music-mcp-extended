@@ -100,14 +100,21 @@ def create_playlist(name: str, privacy: bool = False):
 
 
 def add_tracks_to_playlist(playlist_id, track_ids):
-    """批量添加歌曲到歌单"""
+    """批量添加歌曲到歌单
+    
+    注意：网易云 API SetManipulatePlaylistTracks 的 add 操作会把歌曲列表
+    逆序添加到歌单中（后传入的排在前面）。因此我们在调用 API 前先将
+    track_ids 反转，以保证歌单中的最终顺序与传入顺序一致。
+    """
     if not load_session()[0]:
         return {"success": False, "error": "未登录"}
     
     try:
         # 确保是列表
         ids = track_ids if isinstance(track_ids, list) else [track_ids]
-        result = apis.playlist.SetManipulatePlaylistTracks(ids, playlist_id, op="add")
+        # 反转顺序：API 内部会再次反转，最终保持原始顺序
+        ids_reversed = list(reversed(ids))
+        result = apis.playlist.SetManipulatePlaylistTracks(ids_reversed, playlist_id, op="add")
         if result['code'] == 200:
             return {
                 "success": True,
@@ -212,14 +219,17 @@ def get_song_detail(song_id):
         result = apis.track.GetTrackDetail([str(song_id)])
         if result['code'] == 200 and 'songs' in result and result['songs']:
             song = result['songs'][0]
+            # pyncm GetTrackDetail 返回的字段名: ar=artists, al=album
+            ar = song.get('ar', [])
+            al = song.get('al', {})
             return {
                 "success": True,
                 "id": str(song['id']),
                 "name": song['name'],
-                "artist": song['ar'][0]['name'] if song.get('ar') else "未知",
-                "artist_id": song['ar'][0]['id'] if song.get('ar') else None,
-                "album": song['album']['name'] if song.get('album') else "",
-                "album_id": song['album']['id'] if song.get('album') else None,
+                "artist": ar[0]['name'] if ar else "未知",
+                "artist_id": ar[0]['id'] if ar else None,
+                "album": al.get('name', '') if al else "",
+                "album_id": al.get('id') if al else None,
             }
         return {"success": False, "error": "未找到歌曲"}
     except Exception as e:
@@ -339,3 +349,84 @@ def get_style_list():
 def _GetStyleListInternal():
     """内部函数：获取曲风标签列表（Weapi）"""
     return "/api/tag/list/get", {}
+
+
+def get_style_songs(tag_id, size=20, sort=0):
+    """获取指定曲风标签下的歌曲"""
+    if not load_session()[0]:
+        return {"success": False, "error": "未登录"}
+    try:
+        result = _GetStyleSongsInternal(tag_id, size, sort)
+        if result.get('code') == 200:
+            data = result.get('data', {})
+            songs = []
+            for song in data.get('songs', []):
+                songs.append({
+                    "id": song['id'],
+                    "name": song['name'],
+                    "artist": song['artists'][0]['name'] if song.get('artists') else "未知",
+                })
+            return {
+                "success": True,
+                "tag_id": str(tag_id),
+                "songs": songs,
+                "has_more": data.get('hasMore', False),
+            }
+        return {"success": False, "error": "获取曲风歌曲失败"}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+
+@apis.WeapiCryptoRequest
+def _GetStyleSongsInternal(tag_id, size=20, sort=0):
+    """内部函数：获取曲风标签下的歌曲（Weapi）"""
+    return "/api/style-tag/home/song", {
+        "tagId": str(tag_id),
+        "size": size,
+        "sort": sort,
+        "cursor": 0,
+    }
+
+
+def search_playlist(keyword, limit=10):
+    """搜索歌单"""
+    load_session()
+    try:
+        result = apis.cloudsearch.GetSearchResult(keyword, stype=1000, limit=limit)
+        if result['code'] == 200 and 'result' in result:
+            playlists = result['result'].get('playlists', [])
+            return {
+                "success": True,
+                "playlists": [
+                    {
+                        "id": pl['id'],
+                        "name": pl['name'],
+                        "track_count": pl.get('trackCount', 0),
+                        "creator": pl.get('creator', {}).get('nickname', '未知'),
+                    }
+                    for pl in playlists
+                ],
+            }
+        return {"success": False, "error": "未找到歌单"}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+
+def get_playlist_songs(playlist_id, limit=50):
+    """获取歌单中的所有歌曲"""
+    if not load_session()[0]:
+        return {"success": False, "error": "未登录"}
+    try:
+        result = apis.playlist.GetPlaylistAllTracks(playlist_id)
+        if result['code'] == 200 and 'songs' in result:
+            songs = []
+            for song in result['songs'][:limit]:
+                songs.append({
+                    "id": song['id'],
+                    "name": song['name'],
+                    "artist": song['ar'][0]['name'] if song.get('ar') else "未知",
+                })
+            return {"success": True, "songs": songs}
+        return {"success": False, "error": "获取歌单歌曲失败"}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
