@@ -317,3 +317,25 @@ def get_similar_songs(song_id, limit=20):
             return {"success": False, "error": f"API 错误: {result.get('message', '未知错误')}"}
     except Exception as e:
         return {"success": False, "error": str(e)}
+
+
+def get_style_list():
+    """获取网易云曲风标签完整层级树"""
+    if not load_session()[0]:
+        return {"success": False, "error": "未登录"}
+    try:
+        result = _GetStyleListInternal()
+        if result.get('code') == 200:
+            return {
+                "success": True,
+                "tags": result.get('data', []),
+            }
+        return {"success": False, "error": "获取曲风列表失败"}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+
+@apis.WeapiCryptoRequest
+def _GetStyleListInternal():
+    """内部函数：获取曲风标签列表（Weapi）"""
+    return "/api/tag/list/get", {}

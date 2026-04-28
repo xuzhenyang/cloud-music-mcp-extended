@@ -34,6 +34,7 @@ from cloud_music_mcp.api import (
     get_similar_songs,
     get_similar_artists,
     get_song_wiki,
+    get_style_list,
 )
 
 # 配置日志 (初始化)
@@ -338,6 +339,20 @@ def cloud_music_get_song_wiki(song_id: str):
             "genres": result["genres"],
             "tags": result["tags"],
         }
+    else:
+        return f"获取失败: {result.get('error')}"
+
+
+@mcp.tool()
+def cloud_music_get_style_list():
+    """
+    获取网易云曲风标签完整层级树
+    返回所有曲风分类的层级结构（大类→子类→细分）
+    """
+    logger.info("Calling cloud_music_get_style_list")
+    result = get_style_list()
+    if result["success"]:
+        return {"tags": result["tags"]}
     else:
         return f"获取失败: {result.get('error')}"
 
