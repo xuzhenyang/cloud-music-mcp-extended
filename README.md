@@ -40,6 +40,8 @@
 | `cloud_music_get_similar_songs`   | `song_id`: 歌曲ID, `limit`: 返回数量(默认20)      | 获取与指定歌曲相似的推荐歌曲。             |
 | `cloud_music_get_artist_tracks`   | `artist_id`: 艺术家ID, `limit`: 返回数量(默认30)  | 获取艺术家的热门歌曲列表。                 |
 | `cloud_music_get_album_songs`     | `album_id`: 专辑ID                                | 获取专辑的歌曲列表。                       |
+| `cloud_music_get_song_wiki`       | `song_id`: 歌曲ID                                 | 获取歌曲音乐百科（曲风标签、情绪标签）。   |
+| `cloud_music_get_style_list`      | 无                                                | 获取网易云曲风标签完整层级树（644个标签）。|
 
 ## 🚀 安装与使用
 
