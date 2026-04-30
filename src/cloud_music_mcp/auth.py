@@ -4,49 +4,63 @@ import time
 import json
 import subprocess
 from pyncm import apis
-from pyncm import GetCurrentSession, SetCurrentSession
+from pyncm import GetCurrentSession, SetCurrentSession, DumpSessionAsString, LoadSessionFromString
 import qrcode
 from PIL import Image
 
 # 定义 Session 存储路径
 STORAGE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "storage")
-COOKIE_FILE = os.path.join(STORAGE_DIR, "cookies.json")
+SESSION_FILE = os.path.join(STORAGE_DIR, "session.bin")
 
 def ensure_storage_dir():
     if not os.path.exists(STORAGE_DIR):
         os.makedirs(STORAGE_DIR)
 
 def load_session():
-    """尝试加载本地 Cookies"""
+    """尝试加载本地 Session（完整恢复 login_info + csrf_token + cookies）"""
     ensure_storage_dir()
-    if os.path.exists(COOKIE_FILE):
+    # 优先使用新的完整 session 格式
+    if os.path.exists(SESSION_FILE):
         try:
-            with open(COOKIE_FILE, 'r') as f:
-                cookies = json.load(f)
-                # 更新当前 Session 的 cookies
-                GetCurrentSession().cookies.update(cookies)
-            
-            # 验证 Session 是否有效 (获取用户信息)
+            with open(SESSION_FILE, 'r') as f:
+                dump = f.read()
+            session = LoadSessionFromString(dump)
+            SetCurrentSession(session)
+
+            # 验证 Session 是否有效
             user_info = apis.login.GetCurrentLoginStatus()
-            
-            if user_info['code'] == 200 and user_info['profile']:
+            if user_info['code'] == 200 and user_info.get('profile'):
                 return True, user_info['profile']['nickname']
-            else:
-                return False, None
-        except Exception as e:
+            return False, None
+        except Exception:
+            pass
+
+    # Fallback：兼容旧的 cookies.json 格式（仅恢复 cookies，无 login_info/csrf_token）
+    old_cookie_file = os.path.join(STORAGE_DIR, "cookies.json")
+    if os.path.exists(old_cookie_file):
+        try:
+            with open(old_cookie_file, 'r') as f:
+                cookies = json.load(f)
+            GetCurrentSession().cookies.update(cookies)
+            user_info = apis.login.GetCurrentLoginStatus()
+            if user_info['code'] == 200 and user_info.get('profile'):
+                # 将旧格式升级为新的完整 session 格式
+                save_session()
+                return True, user_info['profile']['nickname']
+            return False, None
+        except Exception:
             return False, None
     return False, None
 
 def save_session():
-    """保存当前 Cookies 到文件"""
+    """保存当前完整 Session 到文件（包含 login_info + csrf_token + cookies）"""
     ensure_storage_dir()
     try:
-        # 获取字典格式的 cookies
-        cookies = GetCurrentSession().cookies.get_dict()
-        with open(COOKIE_FILE, 'w') as f:
-            json.dump(cookies, f)
+        dump = DumpSessionAsString(GetCurrentSession())
+        with open(SESSION_FILE, 'w') as f:
+            f.write(dump)
         return True
-    except Exception as e:
+    except Exception:
         return False
 
 def check_login_status():
