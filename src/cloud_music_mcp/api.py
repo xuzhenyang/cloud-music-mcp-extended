@@ -1,6 +1,13 @@
 import pyncm
 from pyncm import apis
-from auth import load_session
+import sys
+import os
+
+# 尝试相对导入，fallback到绝对导入（兼容直接运行和作为包导入）
+try:
+    from .auth import load_session
+except ImportError:
+    from auth import load_session
 
 def get_daily_recommendations():
     """获取每日推荐歌曲"""
@@ -147,7 +154,7 @@ def _GetSimilarArtistsInternal(artist_id):
 def get_audio_url(song_id):
     """获取歌曲音频下载链接"""
     if not load_session()[0]:
-        return {"success": False, "error": "未登录"}
+        return {"success": False, "error": "未登录，请先调用 login 工具", "error_code": "NOT_LOGGED_IN"}
     try:
         result = apis.track.GetTrackAudio([str(song_id)])
         if result['code'] == 200 and 'data' in result and result['data']:
@@ -161,10 +168,12 @@ def get_audio_url(song_id):
                     "type": data.get('type'),
                     "duration": data.get('time'),  # ms
                 }
-            return {"success": False, "error": "该歌曲暂无音频资源（可能为 VIP 独占或版权限制）"}
-        return {"success": False, "error": "获取音频链接失败"}
+            # 区分：API正常返回但音频为空（VIP/版权限制）
+            return {"success": False, "error": "该歌曲暂无音频资源（可能为 VIP 独占或版权限制）", "error_code": "NO_AUDIO_RESOURCE"}
+        # API 本身报错（code != 200）
+        return {"success": False, "error": f"API 返回错误: {result.get('message', '未知错误')}", "error_code": "API_ERROR", "api_code": result.get('code')}
     except Exception as e:
-        return {"success": False, "error": str(e)}
+        return {"success": False, "error": str(e), "error_code": "EXCEPTION"}
 
 
 def get_artist_tracks(artist_id, limit=30):

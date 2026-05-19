@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-import os
 import sys
+import os
 import logging
 
 # 彻底静音：将 stderr 重定向到 devnull
@@ -10,8 +10,35 @@ sys.stderr = open(os.devnull, "w")
 # 在导入 FastMCP 之前设置环境变量以抑制日志和 Banner
 os.environ["LOGURU_LEVEL"] = "WARNING"
 os.environ["CI"] = "true"
+os.environ["FASTMCP_NO_BANNER"] = "1"  # 抑制 FastMCP 3.x 的 stdout banner
+
+# 修复 rich 版本冲突：系统 rich 13.7.1 太旧，fastmcp 需要新参数
+# 错误: RichHandler.__init__() got an unexpected keyword argument 'tracebacks_max_frames'
+#       StreamHandler.__init__() got an unexpected keyword argument 'tracebacks_suppress'
+_orig_stream_handler_init = logging.StreamHandler.__init__
+
+def _compat_stream_handler_init(self, *args, **kwargs):
+    """兼容性 StreamHandler：过滤掉新版本才有的参数"""
+    kwargs.pop('tracebacks_max_frames', None)
+    kwargs.pop('tracebacks_suppress', None)
+    kwargs.pop('console', None)
+    kwargs.pop('show_time', None)
+    kwargs.pop('show_level', None)
+    kwargs.pop('show_path', None)
+    kwargs.pop('enable_link_path', None)
+    kwargs.pop('highlighter', None)
+    kwargs.pop('markup', None)
+    kwargs.pop('rich_tracebacks', None)
+    kwargs.pop('log_time_format', None)
+    _orig_stream_handler_init(self, *args, **kwargs)
+
+logging.StreamHandler.__init__ = _compat_stream_handler_init
 
 from fastmcp import FastMCP
+
+# 恢复原始 StreamHandler.__init__
+logging.StreamHandler.__init__ = _orig_stream_handler_init
+
 import subprocess
 import json
 import base64
@@ -259,7 +286,10 @@ def cloud_music_get_audio_url(song_id: str):
             "duration": result["duration"],
         }
     else:
-        return f"获取失败: {result.get('error')}"
+        # 传递详细错误信息（包含 error_code）
+        error_detail = result.get('error', '未知错误')
+        error_code = result.get('error_code', 'UNKNOWN')
+        return f"获取失败 [{error_code}]: {error_detail}"
 
 
 @mcp.tool()

@@ -23,7 +23,7 @@ def main():
     args = parser.parse_args()
 
     # FastMCP 直接运行
-    mcp.run()
+    mcp.run(transport='stdio', show_banner=False)
 
 
 if __name__ == "__main__":

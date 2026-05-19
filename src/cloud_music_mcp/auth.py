@@ -73,6 +73,7 @@ def check_login_status():
 
 def login_via_qrcode():
     """执行扫码登录流程"""
+    ensure_storage_dir()
     try:
         # 1. 获取 UUID (Unikey)
         result = apis.login.LoginQrcodeUnikey(1)
@@ -92,11 +93,20 @@ def login_via_qrcode():
         qr_path = os.path.join(STORAGE_DIR, "login_qrcode.png")
         img.save(qr_path)
         
-        # 3. 弹窗显示二维码
+
+        # 3. 弹窗显示二维码（兼容 Linux/macOS），同时输出 URL
+        print(f"\n📱 网易云登录二维码 URL: {qr_content}")
+        print("   请在手机浏览器或网易云 APP 中打开此链接\n")
         if sys.platform == 'win32':
             os.startfile(qr_path)
-        else:
+        elif sys.platform == 'darwin':
             subprocess.run(["open", qr_path])
+        else:
+            # Linux: 尝试 xdg-open，否则只打印路径
+            try:
+                subprocess.run(["xdg-open", qr_path], check=True)
+            except Exception:
+                print(f"   二维码图片路径: {qr_path}\n")
         
         # 4. 轮询检查状态
         max_retries = 60 # 2分钟超时
