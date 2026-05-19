@@ -1,7 +1,5 @@
 import pyncm
 from pyncm import apis
-import sys
-import os
 
 # 尝试相对导入，fallback到绝对导入（兼容直接运行和作为包导入）
 try:
@@ -154,7 +152,7 @@ def _GetSimilarArtistsInternal(artist_id):
 def get_audio_url(song_id):
     """获取歌曲音频下载链接"""
     if not load_session()[0]:
-        return {"success": False, "error": "未登录，请先调用 login 工具", "error_code": "NOT_LOGGED_IN"}
+        return {"success": False, "error": "未登录，请先调用 cloud_music_login 工具", "error_code": "NOT_LOGGED_IN"}
     try:
         result = apis.track.GetTrackAudio([str(song_id)])
         if result['code'] == 200 and 'data' in result and result['data']:
